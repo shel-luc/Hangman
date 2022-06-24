@@ -25,45 +25,97 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-List<Map<String, dynamic>> list = [
+List<Map<String, String>> list = [
   {"title": "Angular", "subtitle": "javascript framework by google"},
   {"title": "react", "subtitle": "javascript Library by Facebook"},
   {"title": "flutter", "subtitle": "framework of dart"},
   {"title": "firebase", "subtitle": "database create by google"},
 ];
 final _random = Random();
-var element = list[_random.nextInt(list.length)];
-var button = [
-  "Q",
-  "W",
-  "E",
-  "R",
-  "T",
-  "Y",
-  "U",
-  "I",
-  "O",
-  "P",
-  "A",
-  "S",
-  "D",
-  "F",
-  "G",
-  "H",
-  "J",
-  "K",
-  "L",
-  "Z",
-  "X",
-  "C",
-  "V",
-  "B",
-  "N",
-  "M"
-];
+//var element = list[_random.nextInt(list.length)];
 
 class _HomePageState extends State<HomePage> {
-  int score = 5;
+  final List<String> button = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
+// CREATEKEYBOARDBUTTON
+  Container createkeyboardButton(char) => Container(
+        margin: const EdgeInsets.all(3),
+        child: MaterialButton(
+          minWidth: 35,
+          height: 45,
+          color: Colors.yellow,
+          onPressed: () {
+            onClick(char);
+          },
+          child: Text(
+            char,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+      );
+
+// createKeybard
+  List<Row> createKeyboard() => button
+      .map((stringCharAlphabet) => stringCharAlphabet
+          .split("")
+          .map((char) => createkeyboardButton(char))
+          .toList())
+      .toList()
+      .map((listButton) => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: listButton,
+          ))
+      .toList();
+
+  int _score = 5;
+  String _word = "";
+  String _desc = "";
+  String _response = "";
+  Map element = {};
+
+  @override
+  void onClick(char) {
+    setState(() {
+      if (_word.contains(char)) {
+        for (var i = 0; i < _word.length; i++) {
+          if (_word[i] == char) {
+            List word = _response.split("");
+            word[i] = char;
+            _response = word.join('');
+          }
+          if (_word == _response) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const PageScreen(
+                          status: true,
+                        )));
+          }
+        }
+      } else {
+        _score--;
+        if (_score == 0) {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const PageScreen(status: false)));
+        }
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _score = 5;
+    element = list[_random.nextInt(list.length)];
+    _word = element["title"].toUpperCase();
+    _desc = element["subtitle"];
+    for (var i = 0; i < _word.length; i++) {
+      _response += "*";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,19 +129,18 @@ class _HomePageState extends State<HomePage> {
               style: TextStyle(fontSize: 20, color: Colors.white),
             )),
           ),
-          ListTile(title: const Text("Replay"), onTap: () {}),
+          ListTile(title: const Text("Replay"), onTap: () {
+            Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
+          }),
           ListTile(
               title: const Text("Help"),
               onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PageScreen()));
+               Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
               }),
           ListTile(
               title: const Text("Quit"),
               onTap: () {
-                SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
               })
         ]),
       ),
@@ -98,8 +149,9 @@ class _HomePageState extends State<HomePage> {
           actionsIconTheme: const IconThemeData(color: Colors.yellow),
           actions: [
             Center(
-                child: Text(
-              '$score',
+                child: 
+                Text(
+              '$_score',
               style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.yellow,
@@ -107,44 +159,68 @@ class _HomePageState extends State<HomePage> {
             )),
             IconButton(onPressed: () {}, icon: const Icon(Icons.star)),
           ]),
-      body: ListView.builder(
-        itemCount: 1,
-        itemBuilder: (BuildContext context, int index) {
-          return ListTile(
-            title: Text("****** $index", textAlign: TextAlign.center),
-            subtitle: Text(element["subtitle"], textAlign: TextAlign.center),
-          );
-        },
+      body: Center(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(0, 60, 0, 0),
+          child: Column(
+            children: [
+              Text(_response),
+              const SizedBox(
+                height: 15,
+              ),
+              Text(_desc),
+              const SizedBox(
+                height: 10,
+              ),
+              Container(
+                color: Colors.grey,
+                padding: const EdgeInsets.symmetric(vertical: 30),
+                child: Column(
+                  children: createKeyboard(),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-  );
+    );
   }
 }
 
-class PageScreen extends StatefulWidget {
-  const PageScreen({Key? key}) : super(key: key);
+class PageScreen extends StatelessWidget {
+  const PageScreen({Key? key, required this.status}) : super(key: key);
+  final bool status;
 
-  @override
-  State<PageScreen> createState() => _PageScreenState();
-}
-
-class _PageScreenState extends State<PageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              "You win",
-              textAlign: TextAlign.center,
-            ),
-            ElevatedButton(onPressed: () {}, child: const Text("Replay")),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(10, 90, 10, 0),
+          child: Column(children: [
+            ((status) ? const Text("You win") : const Text("you loose")),
             const SizedBox(
-              width: 10,
+              height: 170,
             ),
-            ElevatedButton(onPressed: () {}, child: const Text("Quit")),
-          ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
+                    },
+                    child: const Text("Replay")),
+                const SizedBox(
+                  width: 20,
+                ),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => const HomePage()));
+                    },
+                    child: const Text("Quit")),
+              ],
+            )
+          ]),
         ),
       ),
     );
